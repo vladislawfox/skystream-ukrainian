@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.ufdub",
+  "name": "UFDub",
+  "version": 1,
+  "description": "Фільми, серіали, мультфільми та дорами українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://ufdub.com",
+  "authors": ["vladislawfox", "CakesTwix and CloudStream Ukrainian contributors"],
+  "languages": ["uk"],
+  "categories": ["Movie", "Series"],
+  "status": 3
+}

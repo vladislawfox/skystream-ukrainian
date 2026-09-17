@@ -1,8 +1,226 @@
 [
   {
+    "packageName": "com.vladislawfox.ukrainian.bambooua",
+    "name": "BambooUA",
+    "version": 1,
+    "description": "Дорами, азійські фільми та шоу українською.",
+    "baseUrl": "https://bambooua.com",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.bambooua.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.cikavaideya",
+    "name": "Цікава Ідея",
+    "version": 1,
+    "description": "Фільми, серіали, мультсеріали та артхаус українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://cikava-ideya.top",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.cikavaideya.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.doramyworld",
+    "name": "DoramyWorld",
+    "version": 1,
+    "description": "Світ дорам, фільмів та шоу українською.",
+    "baseUrl": "https://doramy.world",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.doramyworld.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.eneyida",
+    "name": "Eneyida",
+    "version": 1,
+    "description": "Фільми та серіали українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://eneyida.tv",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.eneyida.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.kinotron",
+    "name": "KinoTron",
+    "version": 1,
+    "description": "Фільми та серіали українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://kinotron.tv",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.kinotron.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.kinovezha",
+    "name": "KinoVezha",
+    "version": 1,
+    "description": "Фільми та серіали українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://kinovezha.tv",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.kinovezha.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.kinostrain",
+    "name": "Kinostrain",
+    "version": 1,
+    "description": "Фільми, серіали та мультфільми українською. Порт CloudStream Ukrainian.",
+    "baseUrl": "https://kinostrain.com",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.kinostrain.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.klontv",
+    "name": "KlonTV",
+    "version": 1,
+    "description": "Фільми, серіали та мультфільми українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://klonua.com",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.klontv.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.serialno",
+    "name": "Serialno",
+    "version": 1,
+    "description": "Фільми та серіали українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://serialno.tv",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.serialno.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.simpsonsua",
+    "name": "SimpsonsUA",
+    "version": 1,
+    "description": "Мультсеріали та спеціальні випуски українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://simpsonsua.tv",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.simpsonsua.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.uaflix",
+    "name": "UAFlix",
+    "version": 1,
+    "description": "Фільми, серіали, дорами та мультфільми українською. Порт CloudStream Ukrainian.",
+    "baseUrl": "https://uafix.net",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.uaflix.sky"
+  },
+  {
     "packageName": "com.vladislawfox.ukrainian.uakino",
     "name": "UAKino",
-    "version": 1,
+    "version": 2,
     "description": "Фільми, серіали та аніме українською. Порт провайдера CloudStream.",
     "baseUrl": "https://uakino.best",
     "authors": [
@@ -19,5 +237,45 @@
     ],
     "status": 3,
     "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.uakino.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.uaserialspro",
+    "name": "UASerialsPro",
+    "version": 1,
+    "description": "Фільми, серіали та мультфільми українською. Порт CloudStream Ukrainian.",
+    "baseUrl": "https://uaserials.com",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.uaserialspro.sky"
+  },
+  {
+    "packageName": "com.vladislawfox.ukrainian.ufdub",
+    "name": "UFDub",
+    "version": 1,
+    "description": "Фільми, серіали, мультфільми та дорами українською. Порт провайдера CloudStream.",
+    "baseUrl": "https://ufdub.com",
+    "authors": [
+      "vladislawfox",
+      "CakesTwix and CloudStream Ukrainian contributors"
+    ],
+    "languages": [
+      "uk"
+    ],
+    "categories": [
+      "Movie",
+      "Series"
+    ],
+    "status": 3,
+    "url": "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/com.vladislawfox.ukrainian.ufdub.sky"
   }
 ]

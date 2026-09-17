@@ -1,0 +1,18 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.serialno",
+  "name": "Serialno",
+  "version": 1,
+  "description": "Фільми та серіали українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://serialno.tv",
+  "authors": [
+    "vladislawfox",
+    "CakesTwix and CloudStream Ukrainian contributors"
+  ],
+  "languages": [
+    "uk"
+  ],
+  "categories": [
+    "Series"
+  ],
+  "status": 3
+}

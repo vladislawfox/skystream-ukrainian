@@ -1,0 +1,19 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.eneyida",
+  "name": "Eneyida",
+  "version": 1,
+  "description": "Фільми та серіали українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://eneyida.tv",
+  "authors": [
+    "vladislawfox",
+    "CakesTwix and CloudStream Ukrainian contributors"
+  ],
+  "languages": [
+    "uk"
+  ],
+  "categories": [
+    "Movie",
+    "Series"
+  ],
+  "status": 3
+}

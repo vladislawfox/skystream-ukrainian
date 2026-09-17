@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.kinostrain",
+  "name": "Kinostrain",
+  "version": 1,
+  "description": "Фільми, серіали та мультфільми українською. Порт CloudStream Ukrainian.",
+  "baseUrl": "https://kinostrain.com",
+  "authors": ["vladislawfox", "CakesTwix and CloudStream Ukrainian contributors"],
+  "languages": ["uk"],
+  "categories": ["Movie", "Series"],
+  "status": 3
+}

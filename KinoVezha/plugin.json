@@ -1,0 +1,19 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.kinovezha",
+  "name": "KinoVezha",
+  "version": 1,
+  "description": "Фільми та серіали українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://kinovezha.tv",
+  "authors": [
+    "vladislawfox",
+    "CakesTwix and CloudStream Ukrainian contributors"
+  ],
+  "languages": [
+    "uk"
+  ],
+  "categories": [
+    "Movie",
+    "Series"
+  ],
+  "status": 3
+}

@@ -1,7 +1,7 @@
 {
   "name": "Українські джерела",
   "packageName": "com.vladislawfox.ukrainian",
-  "description": "Українські провайдери для SkyStream. Перший провайдер — UAKino.",
+  "description": "Українські фільми, серіали, мультфільми та дорами. Порти провайдерів CloudStream.",
   "manifestVersion": 1,
   "pluginLists": [
     "https://raw.githubusercontent.com/vladislawfox/skystream-ukrainian/main/dist/plugins.json"

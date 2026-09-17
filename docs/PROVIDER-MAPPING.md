@@ -1,7 +1,8 @@
 # CloudStream → SkyStream
 
-Inspected 2026-09-17. This is a source-level comparison, not a claim that the
-four unported sites work today. Only UAKino received live endpoint tests.
+Inspected 2026-09-17. The five detailed mappings below were the initial audit.
+All non-anime providers are now ported; current live results and limitations are
+in VERIFICATION.md. The complete inventory is in README.md.
 
 ## Reference revisions
 
@@ -74,5 +75,14 @@ Keep upstream UAKino's extraction paths, with these adaptations:
 - Existing separate season pages remain navigation entries in recommendations,
   rather than fetching every season on each details request.
 
-Future providers should each get independent manifests and fixture suites, while
-reusing only helpers whose behavior has been verified for that provider.
+Each provider now has an independent manifest and fixture suite. The new ports
+share native bridge/URL helpers and PlayerJS/HLS handling. Named episode IDs use
+semantic keys; explicit zero and numbered episodes remain distinct. Per-episode
+subtitles are not promoted to every episode in a playlist.
+
+Dedicated anime providers (including Coaninet's actual anime catalog), HentaiUkr
+and the non-content SyncPlugin were excluded from this port. Mixed drama/film
+sources retain their non-anime home sections. Original UAKino categories remain.
+
+The Apple transport issue observed during UAKino verification was corrected in
+the separate vladislawfox/skystream fork; it is not an embedded plugin bypass.

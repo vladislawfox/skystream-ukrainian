@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.simpsonsua",
+  "name": "SimpsonsUA",
+  "version": 1,
+  "description": "Мультсеріали та спеціальні випуски українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://simpsonsua.tv",
+  "authors": ["vladislawfox", "CakesTwix and CloudStream Ukrainian contributors"],
+  "languages": ["uk"],
+  "categories": ["Series"],
+  "status": 3
+}

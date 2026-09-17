@@ -1,0 +1,19 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.doramyworld",
+  "name": "DoramyWorld",
+  "version": 1,
+  "description": "Світ дорам, фільмів та шоу українською.",
+  "baseUrl": "https://doramy.world",
+  "authors": [
+    "vladislawfox",
+    "CakesTwix and CloudStream Ukrainian contributors"
+  ],
+  "languages": [
+    "uk"
+  ],
+  "categories": [
+    "Movie",
+    "Series"
+  ],
+  "status": 3
+}

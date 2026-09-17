@@ -1,70 +1,67 @@
 # Verification — 2026-09-17
 
-Version 1 is a **beta**. Extraction works in the live test client. Native
-JavaScript/DOM compatibility is verified separately. Physical iPhone playback
-and the app's complete networking/Cloudflare flow are **not yet verified**.
+The repository now contains 14 independent packages: existing UAKino v2 and
+13 new beta ports. UAKino's installed iPhone app was confirmed working by the user
+following the app URLSession fix. The other providers have live extraction and
+native-worker checks, not physical-device playback confirmation.
 
-## Automated contract tests
+## Checks
 
-`npm test`: 10 passing tests, after observing their initial failures before
-implementation. Coverage: Unicode POST encoding, upstream headers, relative/lazy
-posters, dynamic base URL, metadata, optional fields, explicit trailers, season
-navigation, stable episode IDs, exact episode 1 versus 10, multiple voices,
-movie AJAX fallback, binary Tortuga decoding without `atob`, HLS headers/relative
-variants, subtitles, challenge errors and partial host failure.
+- All 79 fixture tests passed. They exercise all providers, the native bridge contract, dynamic
+  base URLs, encoded search, selectors, metadata, exact season/episode identity,
+  multiple voices, subtitle scoping, public PlayerJS/Tortuga serialization,
+  UASerials AES serialization, Nuxt indexed payloads, HLS variants, and failures.
+- Each `.sky` archive is built from source and contains exactly plugin.json and
+  plugin.js. CI compares every archive's unpacked files with the rebuilt files.
+- Live checks use normal HTTP, without stored credentials, solver automation or
+  executing website JavaScript. HLS responses and HEAD requests verify URLs;
+  video segments are not downloaded.
+- All 13 native provider tests passed. The native check replays recorded live responses through the actual SkyStream
+  JsWorkerRunner, JavaScriptCore, Dart HTML parser and model deserializers. It
+  checks 74 callback operations across all 13 new providers. Replay establishes
+  runtime/parser compatibility; it does not reproduce the device's network path.
 
-## Live built-package test
+## Live results
 
-`npm run test:live` executed the JavaScript extracted from the actual `.sky` ZIP
-using Node 26.7.0 fetch and a SkyStream-shaped HTTP/HTML bridge. On the final run,
-38 HTTP requests returned 200. No credentials, preexisting cookies, challenge
-solver or video segments were used. Raw pages and expiring stream URLs are kept
-only in gitignored `.local/`, never in the published package.
+All sites returned catalog pages; search and player availability varied as below.
+Results combine the full-package run and focused provider checks.
 
-| Case | Result |
-| --- | --- |
-| Home | All six sections loaded |
-| Search `Німона` | One matching title |
-| [Скарб (2023)](https://uakino.best/filmy/genre_drama/36167-skarb.html) | Metadata/poster; Auto plus three HLS variants; master HTTP 200 |
-| [Німона (2023)](https://uakino.best/filmy/genre-action/17444-nmona.html) | Metadata/poster; Auto, 1080p, 720p, 480p; master HTTP 200; one subtitle file returned HTTP 200 with timed cues |
-| [Дива природи, season 1](https://uakino.best/seriesss/dokymentalni/23428-dyva-pryrody-bi-bi-si-naivelychnishi-podii-zhyvoi-pryrody-1-sezon.html) | Six distinct episodes; episode 1 and 2 each returned three voices × four HLS choices, masters HTTP 200 |
+| Provider | Observed playable sample | Limitations observed |
+| --- | --- | --- |
+| UAKino | Movies, six-episode series, Rick and Morty details; HLS/subtitles/posters 200; user-confirmed iPhone operation | Other titles and external-player handoffs not exhaustively checked |
+| UAFlix | Movie and series, including a 32-episode title; HLS 200 | Session-backed sort filters are replaced with explicit category navigation |
+| UASerialsPro | Movie and series through decoded player tabs; HLS 200 | Only recognized public player formats supported |
+| KinoVezha | Movie and series; HLS 200 | Site metadata order differs from older upstream selectors |
+| Eneyida | Movie and 12-episode series, multiple voices, episode-scoped subtitles; HLS 200 | Passive Cloudflare JS must not be mistaken for a challenge page |
+| KinoTron | Movie and 32-episode series; HLS 200 | A sampled trailer-only title correctly returned NO_STREAMS |
+| KlonTV | Movie and series with multiple voices; HLS 200 | POST search returned 403 in the test client |
+| Serialno | Series with 24 episodes; HLS 200 | No physical playback test |
+| SimpsonsUA | Current episode and extracted HLS 200 | Tested search term returned no matches; catalog traversal is bounded |
+| Цікава Ідея | Movie HLS and Ukrainian subtitles 200 | One 35-episode series had a host response “Файл не знайдено” for the first episode |
+| UFDub | Movie and six-episode series; public redirect → MP4 HEAD 200 with ranges | Player follows the public redirect; plugin avoids buffering the whole MP4 |
+| BambooUA | Completed four-episode series and another title; HLS 200 | Several newest titles contain only the sponsor placeholder, which is excluded |
+| DoramyWorld | Movie and six episodes of season 3; HLS 200 | Current data-player per-episode format is supported in addition to upstream's serial iframe |
+| Kinostrain | Movie and 30-episode series through Ashdi; HLS 200 | A vsembed.su-only movie uses an unsupported dynamic player and returns NO_STREAMS |
 
-The HLS variant labels use the actual resolution in the playlist (for example
-1078p for one film), rather than rounding and misreporting it.
+## App transport and scope
 
-## Real SkyStream worker and models
+Original production Dio returned 403 for UAKino with the same headers that
+returned 200 through Apple URLSession. The maintained app fork supplies native
+HTTP and image fetching on Apple platforms, preserves final URLs/cookies and
+retains the original socket adapter when custom DNS is explicitly enabled.
+App network tests: 55 passed, targeted analysis clean, signed profile build
+installed and launched on the physical iPhone. The user then confirmed it works.
+The fork and update instructions are at:
+https://github.com/vladislawfox/skystream/blob/ios-local-build/FORK.md
 
-Against app revision `71a60612d32c1de2b63b7e99d20444a2c2265a76`, Flutter 3.47.1,
-on macOS, `scripts/skystream_native_test.dart` passed with **recorded live HTTP
-responses**. This uses the real `JsWorkerRunner`, JavaScriptCore, native Dart HTML
-parser, bridge callbacks and `MultimediaItem`/`StreamResult` deserialization.
-It verified six home sections, search, Nimona details/four streams/one subtitle,
-and the series' six episodes/twelve stream choices for episode 1.
+No claim is made that CloudStream or this port never encounters network errors.
+Site availability, stream expiry and IP/client-specific responses can change.
+New-provider playback, subtitle rendering, history persistence and external
+players must still be checked on the actual iPhone.
 
-Reproduce the isolated native check after a successful live Node test:
+## Reproduction
 
-```sh
-cd /path/to/skystream
-SKYSTREAM_PLUGIN_ROOT=/path/to/skystream-ukrainian \
-SKYSTREAM_HTTP_FIXTURES=/path/to/skystream-ukrainian/.local/http-fixtures.json \
-  flutter test /path/to/skystream-ukrainian/scripts/skystream_native_test.dart
-```
-
-This proves plugin/runtime/parser compatibility, **not live Dart networking**.
-
-## Observed transport limitation
-
-The same native test with direct Dio HTTP (without fixture replay) received
-**HTTP 403 Cloudflare challenge pages for all six catalog URLs**, including a
-repeat using the actual app's `Accept-Encoding: identity` setting. The plugin
-returned `CLOUDFLARE_BLOCKED` instead of treating the page as content. Curl and
-Node requests with the provider headers succeeded. The differing transport is
-observed; the exact server-side challenge criterion is not known.
-
-SkyStream already has app-level WebView challenge handling and a clearance-cookie
-jar. The CLI/native-worker harness does not run that UI/platform flow. No custom
-challenge bypass, TLS impersonation, proxy or app source change was added.
-This remaining behavior must be tested in the installed app on the physical
-phone. Playback, subtitle rendering, external players, history persistence and
-repository installation in the phone UI remain pending. Device access was
-unavailable during this verification.
+See README.md for npm checks, opt-in live checks and native replay commands.
+Private raw evidence remains in `.local/`: all-live-report.json, native-cases.json,
+group-a/group-b/group-c reports and drama-live.json. These are deliberately not
+committed because they contain raw site responses and transient URLs.

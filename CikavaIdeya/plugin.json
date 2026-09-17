@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.cikavaideya",
+  "name": "Цікава Ідея",
+  "version": 1,
+  "description": "Фільми, серіали, мультсеріали та артхаус українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://cikava-ideya.top",
+  "authors": ["vladislawfox", "CakesTwix and CloudStream Ukrainian contributors"],
+  "languages": ["uk"],
+  "categories": ["Movie", "Series"],
+  "status": 3
+}

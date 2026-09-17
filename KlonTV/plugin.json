@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.klontv",
+  "name": "KlonTV",
+  "version": 1,
+  "description": "Фільми, серіали та мультфільми українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://klonua.com",
+  "authors": ["vladislawfox", "CakesTwix and CloudStream Ukrainian contributors"],
+  "languages": ["uk"],
+  "categories": ["Movie", "Series"],
+  "status": 3
+}

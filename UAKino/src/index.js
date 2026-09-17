@@ -29,7 +29,7 @@ function absolute(raw, parent = base() + '/') {
   const suffix = suffixAt < 0 ? '' : path.slice(suffixAt);
   const parts = [];
   for (const part of pathname.split('/')) {
-    if (part === '..') parts.pop();
+    if (part === '..') { if (parts.length > 1) parts.pop(); }
     else if (part !== '.') parts.push(part);
   }
   return host + parts.join('/') + suffix;

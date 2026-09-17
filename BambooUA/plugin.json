@@ -1,0 +1,19 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.bambooua",
+  "name": "BambooUA",
+  "version": 1,
+  "description": "Дорами, азійські фільми та шоу українською.",
+  "baseUrl": "https://bambooua.com",
+  "authors": [
+    "vladislawfox",
+    "CakesTwix and CloudStream Ukrainian contributors"
+  ],
+  "languages": [
+    "uk"
+  ],
+  "categories": [
+    "Movie",
+    "Series"
+  ],
+  "status": 3
+}

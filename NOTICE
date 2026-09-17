@@ -1,4 +1,4 @@
-SkyStream Ukrainian — UAKino port
+SkyStream Ukrainian — Ukrainian provider ports
 Copyright (C) 2026 vladislawfox (port and repository tooling)
 
 UAKino's request headers, catalog selectors, DLE search/playlist flow,
@@ -22,3 +22,17 @@ https://github.com/akashdh11/skystream-plugins
 The repositories and their authors do not endorse this independent port.
 No video media, site credentials, session cookies or cached site pages are
 included in the distributed repository or plugin.
+
+Additional provider ports adapt their corresponding *Provider Kotlin sources
+at the same pinned upstream commit: BambooUA, CikavaIdeya, DoramyWorld, Eneyida,
+KinoTron, KinoVezha, Kinostrain, KlonTV, Serialno, SimpsonsUATv, UAFlix,
+UASerialsPro, UFDub. Site-specific parsers and public player serialization are
+translated to the native SkyStream bridge; shared helpers live in shared/.
+The current DoramyWorld data-player format and source markup corrections were
+verified against public pages. No website JavaScript is evaluated.
+
+UASerialsPro bundles selected CryptoJS 4.2.0 modules under the MIT License.
+Copyright (c) 2009-2013 Jeff Mott; (c) 2013-2016 Evan Vosberg.
+Full license is preserved in licenses/crypto-js.txt and inside the plugin.js
+bundle. This dependency decodes the site's public player-tab serialization;
+it is not used for generating keys, random secrets or DRM handling.

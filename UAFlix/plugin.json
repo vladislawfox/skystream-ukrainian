@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.uaflix",
+  "name": "UAFlix",
+  "version": 1,
+  "description": "Фільми, серіали, дорами та мультфільми українською. Порт CloudStream Ukrainian.",
+  "baseUrl": "https://uafix.net",
+  "authors": ["vladislawfox", "CakesTwix and CloudStream Ukrainian contributors"],
+  "languages": ["uk"],
+  "categories": ["Movie", "Series"],
+  "status": 3
+}
