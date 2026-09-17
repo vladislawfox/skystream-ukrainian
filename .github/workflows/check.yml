@@ -16,4 +16,6 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run check
       - name: Verify committed packages match source
-        run: git diff --exit-code -- repo.json dist/
+        run: |
+          git diff --exit-code -- repo.json dist/plugins.json
+          node scripts/verify-package.mjs
