@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.uakino",
+  "name": "UAKino",
+  "version": 1,
+  "description": "Фільми, серіали та аніме українською. Порт провайдера CloudStream.",
+  "baseUrl": "https://uakino.best",
+  "authors": ["vladislawfox", "CakesTwix and CloudStream Ukrainian contributors"],
+  "languages": ["uk"],
+  "categories": ["Movie", "Series", "Anime"],
+  "status": 3
+}

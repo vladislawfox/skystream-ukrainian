@@ -1,0 +1,24 @@
+SkyStream Ukrainian — UAKino port
+Copyright (C) 2026 vladislawfox (port and repository tooling)
+
+UAKino's request headers, catalog selectors, DLE search/playlist flow,
+movie iframe fallback, exact episode matching and Tortuga URL decoder are
+adapted from CakesTwix and contributors' CloudStream Ukrainian extensions:
+https://github.com/CakesTwix/cloudstream-extensions-uk
+Commit dea43efe3746545f515344b1985ab8fb4dc8d36c
+UakinoProvider/src/main/kotlin/com/lagradost/UakinoProvider.kt
+UakinoProvider/src/main/kotlin/com/lagradost/UakinoParsing.kt
+
+This is a modified JavaScript port, not the upstream Kotlin plugin. Changes
+include the SkyStream callback/HTTP/DOM API, stable episode identifiers,
+explicit error handling, multiple subtitle tracks and reproducible packaging.
+Distributed under GNU GPL version 3; see LICENSE. Complete corresponding
+source and build instructions are available in this repository.
+
+SkyStream's public extension format and API were studied from:
+https://github.com/akashdh11/skystream
+https://github.com/akashdh11/skystream-tools
+https://github.com/akashdh11/skystream-plugins
+The repositories and their authors do not endorse this independent port.
+No video media, site credentials, session cookies or cached site pages are
+included in the distributed repository or plugin.
