@@ -1,0 +1,11 @@
+{
+  "packageName": "com.vladislawfox.ukrainian.rezkatv",
+  "name": "RezkaTV",
+  "version": 1,
+  "description": "Фільми, серіали та мультфільми RezkaTV. Українські озвучення першими, коли вони доступні. Потрібен SkyStream із підтримкою Anubis.",
+  "baseUrl": "https://rezka-tv.org",
+  "authors": ["vladislawfox", "CloudStream HDrezka contributors"],
+  "languages": ["uk", "ru"],
+  "categories": ["Movie", "Series"],
+  "status": 3
+}

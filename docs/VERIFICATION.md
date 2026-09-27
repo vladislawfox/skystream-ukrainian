@@ -1,4 +1,34 @@
-# Verification — 2026-09-17
+# Verification
+
+## RezkaTV — 2026-09-27
+
+RezkaTV v1 is the fifteenth package. The complete Node suite passes 89 tests,
+including ten RezkaTV cases for metadata, search, stable episode selection,
+translation flags, Ukrainian ordering, stream decoding, subtitles, bounded
+mirror choices, premium-quality exclusion and explicit failures.
+
+A live integration test ran the built `.sky` through `JsBasedProvider`, the
+real SkyStream worker, Apple URLSession and a native WKWebView on macOS.
+The site's own Anubis script established clearance; no saved account credentials
+were supplied. This requires the app changes in fork 2.8.0+10.
+
+- Home: films, series and cartoons; both search queries succeeded.
+- Arrow / «Стрела»: 171 episode entries; S1E15 resolved to 32 stream choices.
+  The selected HLS media playlist returned HTTP 200 and 2,550 seconds of media
+  (42:30), rather than a preview. This title's sampled voices were not Ukrainian.
+- The Fast and the Furious / «Форсаж»: details and 136 stream choices;
+  selected HLS returned HTTP 200 with 6,410 seconds (1:46:50).
+- One CDN response returned a transient HTTP 502 and succeeded on one retry.
+  Availability of every CDN/quality/voice is not guaranteed.
+- No full video or episode was downloaded. Physical iPhone playback is a separate
+  user check; the native test verifies extraction and full-length playlists.
+
+The opt-in test is `integration_test/rezkatv_live_test.dart` in the app fork.
+Pass a JSON file to `--dart-define-from-file` with `REZKA_SCRIPT` and
+`REZKA_MANIFEST`, both base64-encoded from the built archive. No response bodies,
+temporary media URLs or cookies are committed.
+
+## Original Ukrainian ports — 2026-09-17
 
 The repository now contains 14 independent packages: existing UAKino v2 and
 13 new beta ports. UAKino's installed iPhone app was confirmed working by the user

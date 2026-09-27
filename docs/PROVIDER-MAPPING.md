@@ -7,6 +7,7 @@ in VERIFICATION.md. The complete inventory is in README.md.
 ## Reference revisions
 
 - [CloudStream Ukrainian](https://github.com/CakesTwix/cloudstream-extensions-uk/tree/dea43efe3746545f515344b1985ab8fb4dc8d36c), GPL-3.0.
+- [CloudStream HDrezkaProvider](https://github.com/hexated/cloudstream-extensions-multilingual/blob/a09f3b23f3d1c7b119fb39972e89087bdbc4eb39/HDrezkaProvider/src/main/kotlin/com/lagradost/HDrezkaProvider.kt), GPL-3.0; RezkaTV added 2026-09-27.
 - [SkyStream app](https://github.com/akashdh11/skystream/tree/71a60612d32c1de2b63b7e99d20444a2c2265a76).
 - [Tools and API guide](https://github.com/akashdh11/skystream-tools/blob/895766d5599d0d192ab1540f8774f1fb76acf2d9/DEVELOPER.md).
 - [Official plugins](https://github.com/akashdh11/skystream-plugins/tree/fb406c438cc9efb820b1cddb796f0b2e2de89f98).
@@ -35,6 +36,15 @@ QuickJS. `parse_html` on the app returns `html`; the CLI historically returns
 `innerHTML`, so this port accepts both.
 
 ## Provider behavior in the CloudStream reference
+
+RezkaTV uses `.b-content__inline_item` cards, GET search, `.b-post__title`
+metadata and `#simple-episodes-tabs` season/episode IDs. Playback refreshes the
+detail page and posts the exact ID, translator flags and season/episode to
+`/ajax/get_cdn_series/` (`get_movie` or `get_stream`). Public PlayerJS strings
+yield qualities and subtitles; only one primary HLS and MP4 URL per quality
+is offered to avoid exhausting SkyStream's 200-stream limit with CDN mirrors.
+Premium-marked qualities are excluded. Browser challenges belong to the app's
+HTTP bridge, not the plugin parser.
 
 | Provider | Catalog/search | Details, metadata and images | Movies, seasons and episodes | Streams and subtitles |
 | --- | --- | --- | --- | --- |

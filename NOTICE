@@ -36,3 +36,14 @@ Copyright (c) 2009-2013 Jeff Mott; (c) 2013-2016 Evan Vosberg.
 Full license is preserved in licenses/crypto-js.txt and inside the plugin.js
 bundle. This dependency decodes the site's public player-tab serialization;
 it is not used for generating keys, random secrets or DRM handling.
+
+RezkaTV adapts the public HDrezka protocol and selectors from HDrezkaProvider:
+https://github.com/hexated/cloudstream-extensions-multilingual/blob/a09f3b23f3d1c7b119fb39972e89087bdbc4eb39/HDrezkaProvider/src/main/kotlin/com/lagradost/HDrezkaProvider.kt
+Copyright CloudStream HDrezkaProvider contributors, distributed under GPL-3.0.
+Repository license: https://github.com/hexated/cloudstream-extensions-multilingual/blob/master/LICENSE
+Port copyright (c) 2026 vladislawfox. Current public markup was checked on
+rezka-tv.org. The five delimited PlayerJS noise tokens were cross-checked
+against the public n0madic/go-hdrezka protocol reference; no Anubis solver or
+account authentication code from that project is included.
+The app's WebView runs the site's own browser check; the plugin never evaluates
+remote JavaScript or implements a proof-of-work solver.

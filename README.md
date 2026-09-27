@@ -1,8 +1,9 @@
 # Українські джерела для SkyStream
 
-14 незалежних плагінів [SkyStream](https://github.com/akashdh11/skystream),
-портованих із [CloudStream Ukrainian](https://github.com/CakesTwix/cloudstream-extensions-uk).
-Фільми, серіали, мультфільми та дорами українською. Статус нових портів — **beta**.
+15 незалежних плагінів [SkyStream](https://github.com/akashdh11/skystream):
+14 портів [CloudStream Ukrainian](https://github.com/CakesTwix/cloudstream-extensions-uk)
+та RezkaTV на основі CloudStream HDrezkaProvider.
+Фільми, серіали, мультфільми та дорами. Статус нових портів — **beta**.
 
 ## Встановлення й оновлення
 
@@ -32,6 +33,12 @@ UAKino також отримав оновлення до версії 2: вип�
 | BambooUA | [bambooua.com](https://bambooua.com) |
 | DoramyWorld | [doramy.world](https://doramy.world) |
 | Kinostrain | [kinostrain.com](https://kinostrain.com) |
+| RezkaTV | [rezka-tv.org](https://rezka-tv.org) |
+
+RezkaTV показує доступні озвучення сайту; українські стоять першими, коли є.
+Не всі матеріали мають українську доріжку. Підтримуються фільми, сезони й серії,
+HLS та MP4 за якістю, субтитри. Обліковий запис не потрібен; платний доступ
+плагін не відкриває.
 
 Спеціалізовані аніме-джерела не портовані. Змішані сайти залишені, а нові порти
 не додають окремих аніме-розділів на головну. Наявний UAKino зберігає свої категорії.
@@ -42,8 +49,10 @@ UAKino також отримав оновлення до версії 2: вип�
 із системним HTTP-клієнтом Apple. На оригінальному Dart HTTP той самий запит UAKino
 отримував 403, а через URLSession — 200. Виправлений білд встановлено, користувач
 підтвердив роботу UAKino. Інструкція підтримки форка та оновлення з upstream —
-[FORK.md](https://github.com/vladislawfox/skystream/blob/ios-local-build/FORK.md).
-Джерела залишаються окремими `.sky`-плагінами; додавання нових не потребує нового білда.
+[FORK.md](https://github.com/vladislawfox/skystream/blob/main/FORK.md).
+Джерела залишаються окремими `.sky`-плагінами. Для RezkaTV потрібен форк
+**2.8.0+10** або новіший із підтримкою перевірки Anubis у вбудованому WebView.
+У попередніх збірках перевірка може повертатися замість каталогу.
 
 ## Можливості й межі перевірки
 
