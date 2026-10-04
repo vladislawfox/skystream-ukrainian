@@ -47,3 +47,10 @@ against the public n0madic/go-hdrezka protocol reference; no Anubis solver or
 account authentication code from that project is included.
 The app's WebView runs the site's own browser check; the plugin never evaluates
 remote JavaScript or implements a proof-of-work solver.
+
+Kinogo is an original adapter, copyright (c) 2026 vladislawfox, GPL-3.0-only.
+The public mobile/desktop markup at https://vprkh.kinogo.luxury/ and the
+Cinemar embed's public playlist serialization and playlist/load request were
+inspected to implement interoperability. No remote player implementation,
+advertising code or JavaScript evaluation is bundled. Kinogo reuses this
+repository's CloudStream-derived HTTP, parsing and HLS helpers (see above).

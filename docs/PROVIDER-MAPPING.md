@@ -4,6 +4,13 @@ Inspected 2026-09-17. The five detailed mappings below were the initial audit.
 All non-anime providers are now ported; current live results and limitations are
 in VERIFICATION.md. The complete inventory is in README.md.
 
+Kinogo (added 2026-10-04) is an original adapter rather than a CloudStream port.
+It reads mobile `.article--short` / desktop `.shortstory` cards and `/search/`
+results, then the main Cinemar embed. Cinemar's public `#2` serialization yields
+season → episode → voice entries. Playback refreshes the page/embed and posts
+only the selected episode's voice data to `/api/playlist/load` as JSON. HLS
+variants/subtitles use the shared helpers; history stores season/episode numbers.
+
 ## Reference revisions
 
 - [CloudStream Ukrainian](https://github.com/CakesTwix/cloudstream-extensions-uk/tree/dea43efe3746545f515344b1985ab8fb4dc8d36c), GPL-3.0.

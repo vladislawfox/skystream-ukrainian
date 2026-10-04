@@ -1,5 +1,39 @@
 # Verification
 
+## Kinogo — 2026-10-04
+
+Kinogo v1 is the sixteenth package. Nine fixture tests cover desktop/mobile
+catalogs, encoded search, metadata, Cinemar's public #2 serialization, stable
+season/episode numbers, fresh source resolution, partial voice failures,
+HLS qualities, subtitle scoping and explicit errors. One regression covers
+mobile markup whose player sits outside the parsed article element.
+
+Live extraction ran through Apple URLSession using the plugin's request headers:
+
+- Home: ten entries in each of films, series and cartoons. Search for «Стрела»
+  returned twenty entries.
+- Arrow / «Стрела»: 170 available episodes; S1E15 returned 42 source choices
+  (seven voices, Auto and 240p–1080p). The sampled 1080p media playlist returned
+  HTTP 200 and 2,543 seconds (~42 minutes).
+- Twilight / «Сумерки»: twelve source choices from two voices. The sampled
+  1080p media playlist returned HTTP 200 and 7,320 seconds (~122 minutes).
+- Six callbacks from the built `.sky` also passed in the real SkyStream
+  JavaScriptCore worker, Dart HTML parser and model deserializers, replaying the
+  recorded HTTP responses. This confirms runtime compatibility, not iPhone
+  playback. No full video or video segments were downloaded.
+
+Plain curl encountered Cloudflare, while Apple URLSession returned HTTP 200.
+Use the iOS fork's existing Apple HTTP support; no app code/build change was
+needed. The catalog is Russian and the sampled voices were Russian/English.
+Only the main Cinemar player is implemented; the alternative “Плеер 1” is not.
+Availability of every title, translation, CDN or mirror is not guaranteed.
+
+The native replay uses `scripts/skystream_all_native_test.dart`. Set
+`consumeFixtures: true` in a case file to consume repeated matching HTTP
+responses in order, preserving refreshed embed signatures. Live responses and
+temporary stream URLs remain outside version control; committed tests use
+synthetic data and no credentials.
+
 ## RezkaTV — 2026-09-27
 
 RezkaTV v1 is the fifteenth package. The complete Node suite passes 89 tests,

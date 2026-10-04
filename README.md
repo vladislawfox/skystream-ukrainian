@@ -1,8 +1,8 @@
 # Українські джерела для SkyStream
 
-15 незалежних плагінів [SkyStream](https://github.com/akashdh11/skystream):
-14 портів [CloudStream Ukrainian](https://github.com/CakesTwix/cloudstream-extensions-uk)
-та RezkaTV на основі CloudStream HDrezkaProvider.
+16 незалежних плагінів [SkyStream](https://github.com/akashdh11/skystream):
+14 портів [CloudStream Ukrainian](https://github.com/CakesTwix/cloudstream-extensions-uk),
+RezkaTV на основі CloudStream HDrezkaProvider та окремий адаптер Kinogo.
 Фільми, серіали, мультфільми та дорами. Статус нових портів — **beta**.
 
 ## Встановлення й оновлення
@@ -34,11 +34,19 @@ UAKino також отримав оновлення до версії 2: вип�
 | DoramyWorld | [doramy.world](https://doramy.world) |
 | Kinostrain | [kinostrain.com](https://kinostrain.com) |
 | RezkaTV | [rezka-tv.org](https://rezka-tv.org) |
+| Kinogo | [vprkh.kinogo.luxury](https://vprkh.kinogo.luxury/) |
 
 RezkaTV показує доступні озвучення сайту; українські стоять першими, коли є.
 Не всі матеріали мають українську доріжку. Підтримуються фільми, сезони й серії,
 HLS та MP4 за якістю, субтитри. Обліковий запис не потрібен; платний доступ
 плагін не відкриває.
+
+Kinogo v1 підтримує основний плеєр Cinemar: фільми, сезони й серії, озвучення,
+HLS Auto та якості до 1080p, субтитри. Каталог російською; доступні мови залежать
+від матеріалу. Додатковий «Плеер 1» не підтримується. Для нашого iOS-форку
+**2.8.0+10** достатньо оновити список репозиторію та встановити Kinogo — нова
+збірка застосунку не потрібна. Для кожного запуску плагін заново запитує плейлист
+і вибрану серію, не зберігаючи тимчасові адреси потоку в історії.
 
 Спеціалізовані аніме-джерела не портовані. Змішані сайти залишені, а нові порти
 не додають окремих аніме-розділів на головну. Наявний UAKino зберігає свої категорії.

@@ -19,6 +19,7 @@ for (const folder of folders.sort()) {
   packages.add(manifest.packageName);
   let banner = `/*! SPDX-License-Identifier: GPL-3.0-only | ${folder} port (c) 2026 vladislawfox; adapted from CakesTwix and CloudStream Ukrainian contributors. Source & license: https://github.com/vladislawfox/skystream-ukrainian */`;
   if (folder === 'RezkaTV') banner = '/*! SPDX-License-Identifier: GPL-3.0-only | RezkaTV port (c) 2026 vladislawfox; HDrezka protocol adapted from CloudStream HDrezkaProvider contributors (hexated/cloudstream-extensions-multilingual, a09f3b23). Source & license: https://github.com/vladislawfox/skystream-ukrainian */';
+  if (folder === 'Kinogo') banner = '/*! SPDX-License-Identifier: GPL-3.0-only | Kinogo adapter (c) 2026 vladislawfox; public Kinogo/Cinemar protocol, shared CloudStream-derived helpers. Source & license: https://github.com/vladislawfox/skystream-ukrainian */';
   if (folder === 'UASerialsPro') banner += '\n/*! Bundled crypto-js 4.2.0:\n' + (await readFile(new URL('licenses/crypto-js.txt', root), 'utf8')).replace(/\*\//g, '* /') + '\n*/';
   const result = await build({ entryPoints: [new URL(`${folder}/src/index.js`, root).pathname], bundle: true,
     format: 'iife', globalName: 'PluginModule', platform: 'neutral', target: 'es2020', alias: {crypto: new URL('shared/no-native-crypto.js', root).pathname},

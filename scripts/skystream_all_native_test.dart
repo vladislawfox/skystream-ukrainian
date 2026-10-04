@@ -40,7 +40,8 @@ void main() {
       final script = utf8.decode(zip.findFile('plugin.js')!.content);
       final harness = Harness()
         ..provider = manifest['name'] as String
-        ..fixtures = data['fixtures'] as List;
+        ..fixtures = List<dynamic>.from(data['fixtures'] as List)
+        ..consumeFixtures = data['consumeFixtures'] == true;
       addTearDown(harness.dispose);
       await harness.load(
         '(function(){const manifest=${jsonEncode(manifest)}; $script\n globalThis.port={getHome,search,load,loadStreams};})();',
@@ -100,6 +101,8 @@ class Harness {
   }
   late String provider;
   late List<dynamic> fixtures;
+  // Opt in for recordings where repeated requests return refreshed signatures.
+  bool consumeFixtures = false;
   Future<Map<String, dynamic>> request(Map<String, dynamic> args) async {
     final matches = fixtures.where(
       (entry) =>
@@ -114,7 +117,9 @@ class Harness {
         'body': 'Missing recorded response',
         'headers': {},
       };
-    return Map<String, dynamic>.from(matches.first['response'] as Map);
+    final selected = matches.first;
+    if (consumeFixtures) fixtures.remove(selected);
+    return Map<String, dynamic>.from(selected['response'] as Map);
   }
 
   final rx = ReceivePort();
