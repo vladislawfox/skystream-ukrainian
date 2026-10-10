@@ -1,8 +1,8 @@
 {
   "packageName": "com.vladislawfox.ukrainian.kinogo",
   "name": "Kinogo",
-  "version": 1,
-  "description": "Фільми, серіали та мультфільми Kinogo. Каталог російською; озвучення залежать від матеріалу. Плеєр Cinemar.",
+  "version": 2,
+  "description": "Фільми, серіали та мультфільми Kinogo. Каталог російською; озвучення залежать від матеріалу. Плеєри Cinemar, HDVB та NextEmbed.",
   "baseUrl": "https://vprkh.kinogo.luxury",
   "authors": ["vladislawfox"],
   "languages": ["ru"],

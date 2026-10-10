@@ -7,6 +7,12 @@ const code=compiled.outputFiles[0].text;
 const encoded = value => { const bytes=Buffer.from(value);return Buffer.from([29,...bytes.map((b,i)=>b^((29+7*i+13)%256))]).toString('base64'); };
 const player=data=>`<script>new Playerjs({file:${JSON.stringify(data)},subtitle:'[Українська]https://cdn.test/ua.vtt'});</script>`;
 const setup=html=>runtime(code,({url})=>url.startsWith('https://player.test')?html:'#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=100000,RESOLUTION=640x360\n360/index.m3u8\n','https://site.test');
+test('existing providers keep their HLS URL when optional quality discovery fails',async()=>{
+ const rt=runtime(code,({url})=>url.startsWith('https://player.test')?player('https://cdn.test/video.m3u8'):{status:403,body:'quality probe unavailable'},'https://site.test');
+ const result=await rt.call('loadStreams',undefined);
+ assert.equal(result.success,true);
+ assert.deepEqual(result.data.map(s=>s.url),['https://cdn.test/video.m3u8']);
+});
 test('nested voices preserve exact episodes and all matching dubs',async()=>{
  const data=['Dub A','Dub B'].map(title=>({title,folder:[{title:'Сезон 2',folder:[{title:'Серія 1',file:'https://cdn.test/'+title+'/one.m3u8'},{title:'Серія 10',file:'https://cdn.test/ten.m3u8'}]}]}));
  // URL spaces are invalid; use slugged dub URLs.

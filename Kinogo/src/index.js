@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// Original SkyStream adapter for Kinogo's public pages and Cinemar protocol.
+// Original SkyStream adapter for Kinogo's public Cinemar and HDVB players.
 import {base, clean, inner, origin, unique, absolute, headers, ProviderError,
   answer, request, select, text, attribute, poster, episodeUrl, episodeTarget} from '../../shared/core.js';
 import {base64Bytes, jsonValueAt, streamResults, parseSubtitles} from '../../shared/playerjs.js';
@@ -92,7 +92,7 @@ function decodePlaylist(file) {
     return data;
   } catch { throw parseError(); }
 }
-function entriesFrom(data) {
+function entriesFrom(data, field='data') {
   const entries=[];
   const walk=(nodes,context={},depth=0)=>{
     if (depth>6 || !Array.isArray(nodes)) throw parseError();
@@ -104,14 +104,74 @@ function entriesFrom(data) {
       const episode=id.match(/^s\d+e(\d+)$/i)?.[1] ?? name.match(/сери[яі]\s*(\d+)|(\d+)\s*сери[яі]/i)?.slice(1).find(x=>x!==undefined);
       const next={...context,...(season!==undefined?{season:Number(season)}:{}),...(episode!==undefined?{episode:Number(episode),title:name}:{})};
       if (Array.isArray(node.folder)) walk(node.folder,next,depth+1);
-      else if (typeof node.data==='string'&&node.data) entries.push({...next,voice:name||'Kinogo',data:node.data});
+      else if (typeof node[field]==='string'&&node[field]) entries.push({...next,voice:name||'Kinogo',data:node[field]});
     }
   };
   walk(data);
   if (!entries.length) throw noStreams();
   return entries;
 }
-async function playerFrom(html,page) {
+// HDVB's public player posts both the show playlist and individual media tokens
+// to vid11.<href>, with the key issued by the freshly fetched iframe. Never cache it.
+function backupContext(config,url) {
+  const host=origin(url).replace(/^https?:\/\//,'').toLowerCase();
+  const domain=typeof config.href==='string'?config.href.toLowerCase():'';
+  if (!/^[a-z0-9]+(?:[.-][a-z0-9]+)*\.[a-z]{2,}$/.test(domain) ||
+      !(host===domain || host.endsWith('.'+domain)) ||
+      typeof config.key!=='string' || !config.key || /[\r\n]/.test(config.key)) throw parseError();
+  return {kind:'hdvb',url,api:'https://vid11.'+domain,key:config.key};
+}
+async function backupRequest(player,path) {
+  if (!/^\/playlist\/[A-Za-z0-9+_!$=-]+\.txt$/.test(path)) throw parseError();
+  return request(player.api+path,{...headers(player.url),Origin:origin(player.url),
+    'Content-Type':'application/x-www-form-urlencoded','X-CSRF-TOKEN':player.key},'');
+}
+async function readPlayer(url,page) {
+  const body=await request(url,headers(page));
+  for (const script of await select(body,'script')) {
+    // Mobile Kinogo uses NextEmbed. Its seasons are JSON even though the outer
+    // makePlayer options are JavaScript; parse only the serialized array.
+    const seasons=/\bseasons\s*:\s*(?=\[)/.exec(script.text);
+    if (seasons && /\bmakePlayer\s*\(/.test(script.text)) {
+      let data;
+      try {data=JSON.parse(jsonValueAt(script.text,seasons.index+seasons[0].length));} catch {throw parseError();}
+      const entries=[];
+      for (const season of data) {
+        if (season?.blocked || !Number.isInteger(season?.season) || !Array.isArray(season.episodes)) continue;
+        for (const episode of season.episodes) {
+          if (episode?.blocked || !/^\d+$/.test(String(episode?.episode)) || typeof episode.hls!=='string') continue;
+          entries.push({season:season.season,episode:Number(episode.episode),title:`Серія ${episode.episode}`,
+            voice:'NextEmbed',data:episode.hls,subtitles:Array.isArray(episode.cc)
+              ?episode.cc.filter(s=>s&&typeof s.url==='string').map(s=>({url:s.url,label:label(s.name)||'Субтитри'})):[]});
+        }
+      }
+      if (!entries.length) throw noStreams();
+      return {kind:'nextembed',url,entries};
+    }
+    const match=/\bCinemar\s*\(\s*(?=\{)/.exec(script.text);
+    if (match) {
+      let config;
+      try {config=JSON.parse(jsonValueAt(script.text,match.index+match[0].length));} catch {throw parseError();}
+      return {kind:'cinemar',url,entries:entriesFrom(decodePlaylist(config.file))};
+    }
+    const backup=/\b(?:var|let|const)\s+playerConfigs\s*=\s*(?=\{)/.exec(script.text);
+    if (!backup || !/\bHDVBPlayer\s*\(\s*playerConfigs\s*\)/.test(script.text)) continue;
+    let config;
+    try {config=JSON.parse(jsonValueAt(script.text,backup.index+backup[0].length));} catch {throw parseError();}
+    const player=backupContext(config,url);
+    if (typeof config.file!=='string') throw parseError();
+    if (config.file.startsWith('/playlist/')) {
+      const response=await backupRequest(player,config.file);
+      let data;
+      try {data=JSON.parse(response);} catch {throw parseError();}
+      if (!Array.isArray(data)) throw noStreams();
+      return {...player,entries:entriesFrom(data,'file')};
+    }
+    return {...player,entries:[{voice:label(config.translator)||'Kinogo',data:config.file}]};
+  }
+  throw parseError();
+}
+async function playerFrom(html,page,accept=async player=>player) {
   const candidates=[];
   for (const attr of ['data-src','src']) {
     for (const frame of await select(html,'.js-player-container iframe, .player-container iframe, article iframe',attr)) {
@@ -119,19 +179,15 @@ async function playerFrom(html,page) {
       if (url && /\/embed\//.test(url) && !/youtube\.com|youtu\.be/i.test(url)) candidates.push(url);
     }
   }
+  for (const tab of await select(html,'.kg-video-tabs [data-provider][data-src], .video-tabs [data-provider][data-src], .js-player-tabs [data-provider][data-src]','data-src')) {
+    const url=absolute(tab.attr,page);
+    if (url && /\/(?:serial|movie)\/[^/]+\/iframe(?:[?#]|$)|\/embed\/(?:movie|series)\/\d+(?:[?#]|$)/.test(url)) candidates.push(url);
+  }
   if (!candidates.length) throw noStreams();
   let failure;
   for (const url of new Set(candidates)) {
     try {
-      const body=await request(url,headers(page));
-      for (const script of await select(body,'script')) {
-        const match=/\bCinemar\s*\(\s*(?=\{)/.exec(script.text);
-        if (!match) continue;
-        let config;
-        try {config=JSON.parse(jsonValueAt(script.text,match.index+match[0].length));} catch {throw parseError();}
-        return {url,entries:entriesFrom(decodePlaylist(config.file))};
-      }
-      throw parseError();
+      return await accept(await readPlayer(url,page));
     } catch (error) {failure=error;}
   }
   throw failure || noStreams();
@@ -141,15 +197,48 @@ export async function load(input,cb) {
     const url=absolute(input.split('#')[0]);
     const {html,item}=await detail(url);
     if (item.type==='series') {
-      const player=await playerFrom(html,url);
-      item.episodes=unique(player.entries.filter(e=>Number.isInteger(e.season)&&Number.isInteger(e.episode))
-        .map(e=>({name:e.title||`Серія ${e.episode}`,season:e.season,episode:e.episode,
-          url:episodeUrl(url,{season:e.season,episode:e.episode})})),e=>e.season+':'+e.episode)
-        .sort((a,b)=>a.season-b.season||a.episode-b.episode);
-      if (!item.episodes.length) throw new ProviderError('NO_EPISODES','Плеєр Kinogo не повернув список серій.');
+      item.episodes=await playerFrom(html,url,async player=>{
+        const episodes=unique(player.entries.filter(e=>Number.isInteger(e.season)&&Number.isInteger(e.episode))
+          .map(e=>({name:e.title||`Серія ${e.episode}`,season:e.season,episode:e.episode,
+            url:episodeUrl(url,{season:e.season,episode:e.episode})})),e=>e.season+':'+e.episode)
+          .sort((a,b)=>a.season-b.season||a.episode-b.episode);
+        if (!episodes.length) throw new ProviderError('NO_EPISODES','Плеєр Kinogo не повернув список серій.');
+        return episodes;
+      });
     }
     return item;
   });
+}
+async function streamsFrom(player,item,target) {
+  const entries=player.entries.filter(e=>item.type==='series'
+    ?e.season===target.season&&e.episode===target.episode:e.episode===undefined);
+  if (!entries.length) throw noStreams();
+  const results=[];
+  // A show may expose dozens of voices: cap concurrent API + playlist requests.
+  for (let i=0;i<entries.length;i+=3) {
+    results.push(...await Promise.allSettled(entries.slice(i,i+3).map(async entry=>{
+      let media;
+      if (player.kind==='nextembed') {
+        media={file:entry.data,subtitle:entry.subtitles};
+      } else if (player.kind==='hdvb') {
+        if (!/^[~#][A-Za-z0-9+_!$=-]+$/.test(entry.data)) throw noStreams();
+        media={file:(await backupRequest(player,'/playlist/'+entry.data.slice(1)+'.txt')).trim()};
+      } else {
+        const body=await request(origin(player.url)+'/api/playlist/load',
+          {...headers(player.url),'Content-Type':'application/json'},JSON.stringify(entry.data));
+        try {media=JSON.parse(body);} catch {throw parseError();}
+        if (!media || media.success===false) throw noStreams();
+        media=media.data || media;
+      }
+      if (typeof media.file!=='string') throw noStreams();
+      const streams=await streamResults(media.file,{voice:entry.voice,player:player.url,requireValidHls:true,
+        subtitles:parseSubtitles(media.subtitle||'',player.url)});
+      return streams.filter(s=>/^https?:\/\/[^\s]+\.(?:m3u8|mp4)(?:[?#]|$)/i.test(s.url));
+    })));
+  }
+  const streams=unique(results.filter(r=>r.status==='fulfilled').flatMap(r=>r.value),s=>s.source+'|'+s.url);
+  if (!streams.length) throw results.find(r=>r.status==='rejected')?.reason || noStreams();
+  return streams;
 }
 export async function loadStreams(input,cb) {
   return answer(cb,async()=>{
@@ -159,28 +248,6 @@ export async function loadStreams(input,cb) {
     if (item.type==='series' && (!Number.isInteger(target?.season)||!Number.isInteger(target?.episode))) {
       throw new ProviderError('INVALID_EPISODE','Виберіть конкретну серію перед відтворенням.');
     }
-    const player=await playerFrom(html,url);
-    const entries=player.entries.filter(e=>item.type==='series'
-      ?e.season===target.season&&e.episode===target.episode:e.episode===undefined);
-    if (!entries.length) throw noStreams();
-    const results=[];
-    // A show may expose dozens of voices: cap concurrent API + playlist requests.
-    for (let i=0;i<entries.length;i+=3) {
-      results.push(...await Promise.allSettled(entries.slice(i,i+3).map(async entry=>{
-        const body=await request(origin(player.url)+'/api/playlist/load',
-          {...headers(player.url),'Content-Type':'application/json'},JSON.stringify(entry.data));
-        let media;
-        try {media=JSON.parse(body);} catch {throw parseError();}
-        if (!media || media.success===false) throw noStreams();
-        media=media.data || media;
-        if (typeof media.file!=='string') throw noStreams();
-        const streams=await streamResults(media.file,{voice:entry.voice,player:player.url,
-          subtitles:parseSubtitles(media.subtitle||'',player.url)});
-        return streams.filter(s=>/^https?:\/\/[^\s]+\.(?:m3u8|mp4)(?:[?#]|$)/i.test(s.url));
-      })));
-    }
-    const streams=unique(results.filter(r=>r.status==='fulfilled').flatMap(r=>r.value),s=>s.source+'|'+s.url);
-    if (!streams.length) throw results.find(r=>r.status==='rejected')?.reason || noStreams();
-    return streams;
+    return playerFrom(html,url,player=>streamsFrom(player,item,target));
   });
 }

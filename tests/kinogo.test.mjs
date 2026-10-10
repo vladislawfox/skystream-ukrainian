@@ -135,3 +135,163 @@ test('Kinogo accepts genuine empty search, rejects HTML/error URLs as media',asy
     assert.equal(result.errorCode,'NO_STREAMS');
   }
 });
+
+const backup = 'https://vid123.video.test/serial/public-id/iframe?d=mirror.test';
+const backupApi = 'https://vid11.video.test/playlist/';
+const withBackup = () => detail(true) + `<ul class="kg-video-tabs"><li data-provider="1" data-src="${backup}">Плеер 1</li></ul>`;
+const backupPlayer = (key = 'fresh-key') => `<script>var playerConfigs = ${JSON.stringify({file:'/playlist/show.txt',key,href:'video.test'})}; var player = new HDVBPlayer(playerConfigs);</script>`;
+const backupPlaylist = (token = 'episode-15') => [
+  {title:'Сезон 2',id:'2',folder:[{title:'1 серия',episode:'1',folder:[{title:'Original',file:'~other-season'},[]]}]},
+  {title:'Сезон 1',id:'1',folder:[
+    {title:'14 серия',episode:'14',folder:[{title:'LostFilm',file:'~episode-14'}]},
+    {title:'15 серия',episode:'15',folder:[{title:'LostFilm',file:'~'+token},[],{title:'Original',file:'~unavailable'}]},
+  ]},
+];
+test('Kinogo falls back from a dead Cinemar to the tab playlist with stable episode links',async()=>{
+  const r=await provider(({url,method,headers,body})=>{
+    if(url===series) return withBackup();
+    if(url===frame) return '<h1>404 Страница не найдена</h1>';
+    if(url===backup) return backupPlayer();
+    assert.equal(url,backupApi+'show.txt');
+    assert.equal(method,'POST');
+    assert.equal(body,'');
+    assert.equal(headers['X-CSRF-TOKEN'],'fresh-key');
+    assert.equal(headers['Content-Type'],'application/x-www-form-urlencoded');
+    assert.equal(headers.Referer,backup);
+    return JSON.stringify(backupPlaylist());
+  });
+  const result=await r.call('load',series);
+  assert.equal(result.success,true,result.message);
+  assert.deepEqual(result.data.episodes.map(e=>[e.season,e.episode]),[[1,14],[1,15],[2,1]]);
+  assert.equal(result.data.episodes[1].url,series+'#uk='+encodeURIComponent('{"v":1,"season":1,"episode":15}'));
+});
+test('Kinogo refreshes backup tokens, resolves only the selected episode and isolates failed voices',async()=>{
+  let fresh=false;
+  const r=await provider(({url,method,headers})=>{
+    if(url===series) return withBackup();
+    if(url===frame) return {status:503,body:'unavailable'};
+    if(url===backup) return backupPlayer(fresh?'new-key':'old-key');
+    if(url.startsWith(backupApi)) {
+      assert.equal(method,'POST');
+      assert.equal(headers['X-CSRF-TOKEN'],fresh?'new-key':'old-key');
+      if(url===backupApi+'show.txt') return JSON.stringify(backupPlaylist(fresh?'new-15':'old-15'));
+      if(url===backupApi+'unavailable.txt') return '10';
+      assert.equal(url,backupApi+'new-15.txt');
+      return 'https://cdn.test/selected/master.m3u8';
+    }
+    assert.equal(url,'https://cdn.test/selected/master.m3u8');
+    assert.equal(headers['X-CSRF-TOKEN'],undefined);
+    return hls;
+  });
+  const loaded=await r.call('load',series);
+  assert.equal(loaded.success,true,loaded.message);
+  fresh=true;
+  const result=await r.call('loadStreams',loaded.data.episodes[1].url);
+  assert.equal(result.success,true,result.message);
+  assert.deepEqual(result.data.map(s=>s.source),['LostFilm · Auto','LostFilm · 1080p','LostFilm · 720p']);
+  assert.ok(result.data.every(s=>s.headers.Referer==='https://vid123.video.test/'));
+  assert.ok(result.data.every(s=>!s.headers['X-CSRF-TOKEN']));
+  assert.equal(r.calls.filter(c=>c.url===backup).length,2);
+});
+test('Kinogo uses the backup when Cinemar parses but its selected stream is unavailable',async()=>{
+  const r=await provider(({url})=>{
+    if(url===series) return withBackup();
+    if(url===frame) return player(playlist());
+    if(url==='https://cinema.test/api/playlist/load') return '{"success":false}';
+    if(url===backup) return backupPlayer();
+    if(url===backupApi+'show.txt') return JSON.stringify(backupPlaylist());
+    if(url===backupApi+'other-season.txt') return 'https://cdn.test/second-season/master.m3u8';
+    assert.equal(url,'https://cdn.test/second-season/master.m3u8');
+    return hls;
+  });
+  const episode=(await r.call('load',series)).data.episodes.find(e=>e.season===2&&e.episode===1);
+  const result=await r.call('loadStreams',episode.url);
+  assert.equal(result.success,true,result.message);
+  assert.ok(result.data.every(s=>s.url.includes('/second-season/')));
+});
+test('Kinogo never treats backup denial, HTML or missing episodes as playable video',async()=>{
+  const target=series+'#uk='+encodeURIComponent('{"v":1,"season":1,"episode":15}');
+  for (const response of ['10','<html>Access denied</html>','https://cdn.test/error.html']) {
+    const r=await provider(({url})=>{
+      if(url===series) return withBackup();
+      if(url===frame) return '<h1>404</h1>';
+      if(url===backup) return backupPlayer();
+      if(url===backupApi+'show.txt') return JSON.stringify(backupPlaylist());
+      assert.ok([backupApi+'episode-15.txt',backupApi+'unavailable.txt'].includes(url));
+      return response;
+    });
+    assert.equal((await r.call('loadStreams',target)).success,false);
+    const missing=await r.call('loadStreams',series+'#uk='+encodeURIComponent('{"v":1,"season":1,"episode":99}'));
+    assert.equal(missing.errorCode,'NO_STREAMS');
+  }
+});
+test('Kinogo does not send the backup key to an unrelated host or a malformed playlist path',async()=>{
+  for (const config of [
+    {file:'/playlist/show.txt',key:'public-key',href:'unrelated.test'},
+    {file:'/playlist/../../other.txt',key:'public-key',href:'video.test'},
+  ]) {
+    const r=await provider(({url})=>{
+      if(url===series) return withBackup();
+      if(url===frame) return '<h1>404</h1>';
+      assert.equal(url,backup);
+      return `<script>var playerConfigs=${JSON.stringify(config)};new HDVBPlayer(playerConfigs);</script>`;
+    });
+    const result=await r.call('load',series);
+    assert.equal(result.errorCode,'PARSE_ERROR');
+    assert.ok(r.calls.every(c=>c.method==='GET'));
+  }
+});
+test('Kinogo falls back when Cinemar has no numbered episodes',async()=>{
+  const r=await provider(({url})=>{
+    if(url===series) return withBackup();
+    if(url===frame) return player([voice('unusable')]);
+    if(url===backup) return backupPlayer();
+    assert.equal(url,backupApi+'show.txt');
+    return JSON.stringify(backupPlaylist());
+  });
+  const result=await r.call('load',series);
+  assert.equal(result.success,true,result.message);
+  assert.deepEqual(result.data.episodes.map(e=>[e.season,e.episode]),[[1,14],[1,15],[2,1]]);
+});
+test('Kinogo falls back when the primary HLS URL returns an HTTP error or HTML',async()=>{
+  for(const broken of [{status:403,body:'expired'},'<html>not a playlist</html>']) {
+    const r=await provider(({url})=>{
+      if(url===series) return withBackup();
+      if(url===frame) return player(playlist());
+      if(url==='https://cinema.test/api/playlist/load') return '{"file":"https://cdn.test/dead.m3u8"}';
+      if(url==='https://cdn.test/dead.m3u8') return broken;
+      if(url===backup) return backupPlayer();
+      if(url===backupApi+'show.txt') return JSON.stringify(backupPlaylist());
+      if(url===backupApi+'other-season.txt') return 'https://cdn.test/backup.m3u8';
+      assert.equal(url,'https://cdn.test/backup.m3u8');return hls;
+    });
+    const result=await r.call('loadStreams',series+'#uk='+encodeURIComponent('{"v":1,"season":2,"episode":1}'));
+    assert.equal(result.success,true,result.message);
+    assert.ok(result.data.every(s=>!s.url.includes('dead')));
+    assert.ok(r.calls.some(c=>c.url===backup));
+  }
+});
+test('Kinogo supports mobile NextEmbed tabs and keeps external audio in the master playlist',async()=>{
+  const mobile='https://api.nextembed.test/embed/movie/619';
+  let fresh=false;
+  const r=await provider(({url})=>{
+    if(url===series) return detail(true)+`<ul class="js-player-tabs player-tabs"><li data-provider="1" data-src="${mobile}">Плеер 1</li></ul>`;
+    if(url===frame) return '<h1>404</h1>';
+    if(url===mobile) return `<script data-name="mk">makePlayer({playlist:{seasons:${JSON.stringify([
+      {season:2,blocked:false,episodes:[{episode:'1',hls:'https://cdn.test/wrong.m3u8'}]},
+      {season:1,blocked:false,episodes:[{episode:'15',hls:`https://cdn.test/${fresh?'new':'old'}.m3u8`,audio:{names:['LostFilm','ICTV'],order:[0,1]},cc:[{name:'English',url:'https://cdn.test/en.vtt'}]}]},
+      {season:3,blocked:true,episodes:[{episode:'1',hls:'https://cdn.test/blocked.m3u8'}]},
+    ])}}});</script>`;
+    assert.equal(url,'https://cdn.test/new.m3u8');
+    return hls+'\n#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="ICTV",URI="uk.m3u8"';
+  });
+  const item=await r.call('load',series);
+  assert.equal(item.success,true,item.message);
+  assert.deepEqual(item.data.episodes.map(e=>[e.season,e.episode]),[[1,15],[2,1]]);
+  fresh=true;
+  const result=await r.call('loadStreams',item.data.episodes[0].url);
+  assert.equal(result.success,true,result.message);
+  assert.deepEqual(result.data.map(s=>s.url),['https://cdn.test/new.m3u8']);
+  assert.equal(result.data[0].headers.Referer,'https://api.nextembed.test/');
+  assert.equal(result.data[0].subtitles[0].url,'https://cdn.test/en.vtt');
+});

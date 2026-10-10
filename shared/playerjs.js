@@ -149,16 +149,20 @@ export function episodesFromPlayers(players,pageUrl){
     return {name:e.episodeName,season:e.season,episode:e.episode,url:episodeUrl(pageUrl,target),posterUrl:e.posterUrl,dubStatus:'dubbed'};
   }).sort((a,b)=>a.season-b.season||a.episode-b.episode);
 }
-export async function streamResults(file,{voice=manifest.name,player=base(),subtitles=[]}={}){
+export async function streamResults(file,{voice=manifest.name,player=base(),subtitles=[],requireValidHls=false}={}){
   const streams=[];const streamHeaders=headers(origin(player)+'/');
   for(const media of mediaParts(file,player)){
     const subs=unique([...parseSubtitles(subtitles,player),...media.subtitles],s=>s.url);
     const result=(url,quality)=>({url,source:`${media.voice||voice} · ${quality}`,providerName:manifest.name,headers:streamHeaders,subtitles:subs});
-    streams.push(result(media.url,media.quality));
-    if(!/\.m3u8(?:[?#]|$)/i.test(media.url))continue;
+    const original=result(media.url,media.quality);
+    const isHls=/\.m3u8(?:[?#]|$)/i.test(media.url);
+    if(!requireValidHls||!isHls)streams.push(original);
+    if(!isHls)continue;
     try{
       const hls=await request(media.url,streamHeaders);
-      if(!hls.trimStart().startsWith('#EXTM3U')||/#EXT-X-MEDIA:.*TYPE=AUDIO/.test(hls))continue;
+      if(!hls.trimStart().startsWith('#EXTM3U'))continue;
+      if(requireValidHls)streams.push(original);
+      if(/#EXT-X-MEDIA:.*TYPE=AUDIO/.test(hls))continue;
       const lines=hls.split(/\r?\n/).map(l=>l.trim());
       for(let i=0;i<lines.length;i++){if(!lines[i].startsWith('#EXT-X-STREAM-INF:'))continue;const quality=lines[i].match(/RESOLUTION=\d+x(\d+)/)?.[1];let j=i+1;while(j<lines.length&&(!lines[j]||lines[j].startsWith('#')))j++;const url=absolute(lines[j],media.url);if(url)streams.push(result(url,quality?`${quality}p`:'HLS'));}
     }catch{}
