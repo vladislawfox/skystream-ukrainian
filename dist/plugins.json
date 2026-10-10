@@ -122,7 +122,7 @@
   {
     "packageName": "com.vladislawfox.ukrainian.kinogo",
     "name": "Kinogo",
-    "version": 2,
+    "version": 3,
     "description": "Фільми, серіали та мультфільми Kinogo. Каталог російською; озвучення залежать від матеріалу. Плеєри Cinemar, HDVB та NextEmbed.",
     "baseUrl": "https://vprkh.kinogo.luxury",
     "authors": [

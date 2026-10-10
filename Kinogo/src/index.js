@@ -126,9 +126,11 @@ async function backupRequest(player,path) {
   return request(player.api+path,{...headers(player.url),Origin:origin(player.url),
     'Content-Type':'application/x-www-form-urlencoded','X-CSRF-TOKEN':player.key},'');
 }
-async function readPlayer(url,page) {
+async function readPlayer(url,page,isActive) {
   const body=await request(url,headers(page));
+  if (!isActive()) throw noStreams();
   for (const script of await select(body,'script')) {
+    if (!isActive()) throw noStreams();
     // Mobile Kinogo uses NextEmbed. Its seasons are JSON even though the outer
     // makePlayer options are JavaScript; parse only the serialized array.
     const seasons=/\bseasons\s*:\s*(?=\[)/.exec(script.text);
@@ -162,6 +164,7 @@ async function readPlayer(url,page) {
     if (typeof config.file!=='string') throw parseError();
     if (config.file.startsWith('/playlist/')) {
       const response=await backupRequest(player,config.file);
+      if (!isActive()) throw noStreams();
       let data;
       try {data=JSON.parse(response);} catch {throw parseError();}
       if (!Array.isArray(data)) throw noStreams();
@@ -184,13 +187,40 @@ async function playerFrom(html,page,accept=async player=>player) {
     if (url && /\/(?:serial|movie)\/[^/]+\/iframe(?:[?#]|$)|\/embed\/(?:movie|series)\/\d+(?:[?#]|$)/.test(url)) candidates.push(url);
   }
   if (!candidates.length) throw noStreams();
-  let failure;
-  for (const url of new Set(candidates)) {
-    try {
-      return await accept(await readPlayer(url,page));
-    } catch (error) {failure=error;}
-  }
-  throw failure || noStreams();
+  const urls=[...new Set(candidates)];
+  // A blocked host can spend most of SkyStream's 90-second invoke budget in
+  // HTTP/Cloudflare handling. Give the primary a head start, then let a working
+  // backup finish without waiting for it. Failures never win this race.
+  return new Promise((resolve,reject)=>{
+    let next=0,pending=0,settled=false,timer;
+    const failures=[];
+    const start=()=>{
+      if (settled || next>=urls.length) return;
+      const index=next++;
+      pending++;
+      const isActive=()=>!settled;
+      readPlayer(urls[index],page,isActive).then(player=>{
+        if (isActive()) return accept(player,isActive);
+      }).then(value=>{
+        if (settled) return;
+        settled=true;
+        clearTimeout(timer);
+        resolve(value);
+      },error=>{
+        pending--;
+        if (settled) return;
+        failures[index]=error;
+        clearTimeout(timer);
+        if (next<urls.length) start();
+        else if (!pending) {
+          settled=true;
+          reject(failures[urls.length-1] || noStreams());
+        }
+      });
+      if (next<urls.length) timer=setTimeout(start,3000);
+    };
+    start();
+  });
 }
 export async function load(input,cb) {
   return answer(cb,async()=>{
@@ -209,14 +239,16 @@ export async function load(input,cb) {
     return item;
   });
 }
-async function streamsFrom(player,item,target) {
+async function streamsFrom(player,item,target,isActive) {
   const entries=player.entries.filter(e=>item.type==='series'
     ?e.season===target.season&&e.episode===target.episode:e.episode===undefined);
   if (!entries.length) throw noStreams();
   const results=[];
   // A show may expose dozens of voices: cap concurrent API + playlist requests.
   for (let i=0;i<entries.length;i+=3) {
+    if (!isActive()) return [];
     results.push(...await Promise.allSettled(entries.slice(i,i+3).map(async entry=>{
+      if (!isActive()) return [];
       let media;
       if (player.kind==='nextembed') {
         media={file:entry.data,subtitle:entry.subtitles};
@@ -226,12 +258,14 @@ async function streamsFrom(player,item,target) {
       } else {
         const body=await request(origin(player.url)+'/api/playlist/load',
           {...headers(player.url),'Content-Type':'application/json'},JSON.stringify(entry.data));
+        if (!isActive()) return [];
         try {media=JSON.parse(body);} catch {throw parseError();}
         if (!media || media.success===false) throw noStreams();
         media=media.data || media;
       }
+      if (!isActive()) return [];
       if (typeof media.file!=='string') throw noStreams();
-      const streams=await streamResults(media.file,{voice:entry.voice,player:player.url,requireValidHls:true,
+      const streams=await streamResults(media.file,{voice:entry.voice,player:player.url,requireValidHls:true,isActive,
         subtitles:parseSubtitles(media.subtitle||'',player.url)});
       return streams.filter(s=>/^https?:\/\/[^\s]+\.(?:m3u8|mp4)(?:[?#]|$)/i.test(s.url));
     })));
@@ -248,6 +282,6 @@ export async function loadStreams(input,cb) {
     if (item.type==='series' && (!Number.isInteger(target?.season)||!Number.isInteger(target?.episode))) {
       throw new ProviderError('INVALID_EPISODE','Виберіть конкретну серію перед відтворенням.');
     }
-    return playerFrom(html,url,player=>streamsFrom(player,item,target));
+    return playerFrom(html,url,(player,isActive)=>streamsFrom(player,item,target,isActive));
   });
 }

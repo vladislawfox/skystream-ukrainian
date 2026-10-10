@@ -295,3 +295,147 @@ test('Kinogo supports mobile NextEmbed tabs and keeps external audio in the mast
   assert.equal(result.data[0].headers.Referer,'https://api.nextembed.test/');
   assert.equal(result.data[0].subtitles[0].url,'https://cdn.test/en.vtt');
 });
+test('Kinogo returns backup episodes while the primary HTTP request is still stalled',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  let startPrimary,finishPrimary;
+  const primaryStarted=new Promise(resolve=>startPrimary=resolve);
+  const primaryResponse=new Promise(resolve=>finishPrimary=resolve);
+  const r=await provider(({url})=>{
+    if(url===series) return withBackup();
+    if(url===frame){startPrimary();return primaryResponse;}
+    if(url===backup) return backupPlayer();
+    assert.equal(url,backupApi+'show.txt');return JSON.stringify(backupPlaylist());
+  });
+  let completed;
+  const loading=r.call('load',series).then(result=>{completed=result;return result;});
+  await primaryStarted;
+  assert.ok(!r.calls.some(c=>c.url===backup));
+  t.mock.timers.tick(5000);
+  // Let the real async parser finish, without releasing the stalled request.
+  await new Promise(setImmediate);
+  const completedBeforePrimary=completed?.success===true;
+  // Always release the fixture, including on the pre-fix failing run.
+  finishPrimary('<h1>unavailable</h1>');
+  const result=await loading;
+  assert.equal(completedBeforePrimary,true,'The backup must complete while the primary is still stalled');
+  assert.equal(result.success,true,result.message);
+  assert.equal(result.data.episodes.length,3);
+});
+test('Kinogo keeps a fast primary and does not start backup requests after completion',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  const r=await provider(network(playlist(),{[series]:withBackup()}));
+  const loaded=await r.call('load',series);
+  assert.equal(loaded.success,true,loaded.message);
+  t.mock.timers.tick(10000);
+  await new Promise(setImmediate);
+  assert.ok(!r.calls.some(c=>c.url===backup));
+});
+test('Kinogo waits for a usable primary if the concurrent backup fails first',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  let startPrimary,finishPrimary;
+  const started=new Promise(resolve=>startPrimary=resolve);
+  const response=new Promise(resolve=>finishPrimary=resolve);
+  const r=await provider(({url})=>{
+    if(url===series)return withBackup();
+    if(url===frame){startPrimary();return response;}
+    assert.equal(url,backup);return {status:503,body:'unavailable'};
+  });
+  let completed=false;
+  const loading=r.call('load',series).then(result=>{completed=true;return result;});
+  await started;t.mock.timers.tick(5000);await new Promise(setImmediate);
+  assert.ok(r.calls.some(c=>c.url===backup));
+  assert.equal(completed,false);
+  finishPrimary(player(playlist()));
+  const result=await loading;
+  assert.equal(result.success,true,result.message);
+  assert.deepEqual(result.data.episodes.map(e=>[e.season,e.episode]),[[1,1],[1,10],[2,1]]);
+});
+test('Kinogo returns backup streams while the primary media API is stalled',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  let startApi,finishApi;
+  const started=new Promise(resolve=>startApi=resolve);
+  const response=new Promise(resolve=>finishApi=resolve);
+  const r=await provider(({url})=>{
+    if(url===series)return withBackup();
+    if(url===frame)return player(playlist());
+    if(url==='https://cinema.test/api/playlist/load'){startApi();return response;}
+    if(url===backup)return backupPlayer();
+    if(url===backupApi+'show.txt')return JSON.stringify(backupPlaylist());
+    if(url===backupApi+'other-season.txt')return 'https://cdn.test/backup.m3u8';
+    assert.equal(url,'https://cdn.test/backup.m3u8');return hls;
+  });
+  let completed;
+  const loading=r.call('loadStreams',series+'#uk='+encodeURIComponent('{"v":1,"season":2,"episode":1}'))
+    .then(result=>{completed=result;return result;});
+  await started;t.mock.timers.tick(5000);await new Promise(setImmediate);
+  const ready=completed?.success===true;
+  finishApi('{"success":false}');
+  const result=await loading;
+  assert.equal(ready,true,'Media API timeout must not hold the working backup');
+  assert.equal(result.success,true,result.message);
+  assert.ok(result.data.every(s=>s.source.startsWith('Original')));
+});
+test('Kinogo stops losing voice batches after the backup has returned',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  let firstBatch,release;
+  const started=new Promise(resolve=>firstBatch=resolve);
+  const response=new Promise(resolve=>release=resolve);
+  let primaryPosts=0;
+  const r=await provider(({url})=>{
+    if(url===series)return withBackup();
+    if(url===frame)return player([{id:'s02',title:'Сезон 2',folder:[{id:'s02e01',title:'Серия 1',folder:[1,2,3,4,5,6].map(n=>voice(String(n)))}]}]);
+    if(url==='https://cinema.test/api/playlist/load'){if(++primaryPosts===3)firstBatch();return response;}
+    if(url===backup)return backupPlayer();
+    if(url===backupApi+'show.txt')return JSON.stringify(backupPlaylist());
+    if(url===backupApi+'other-season.txt')return 'https://cdn.test/backup.m3u8';
+    assert.equal(url,'https://cdn.test/backup.m3u8');return hls;
+  });
+  const loading=r.call('loadStreams',series+'#uk='+encodeURIComponent('{"v":1,"season":2,"episode":1}'));
+  await started;t.mock.timers.tick(5000);
+  const result=await loading;
+  assert.equal(result.success,true,result.message);
+  release({status:499,body:'cancelled by completed invocation'});
+  await new Promise(setImmediate);
+  assert.equal(primaryPosts,3,'Completion must not start another primary voice batch');
+});
+test('Kinogo ignores a late primary iframe after backup playback is ready',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  let startPrimary,release;
+  const started=new Promise(resolve=>startPrimary=resolve);
+  const response=new Promise(resolve=>release=resolve);
+  const r=await provider(({url})=>{
+    if(url===series)return withBackup();
+    if(url===frame){startPrimary();return response;}
+    if(url===backup)return backupPlayer();
+    if(url===backupApi+'show.txt')return JSON.stringify(backupPlaylist());
+    if(url===backupApi+'other-season.txt')return 'https://cdn.test/backup.m3u8';
+    if(url==='https://cinema.test/api/playlist/load')return '{"success":false}';
+    assert.equal(url,'https://cdn.test/backup.m3u8');return hls;
+  });
+  const loading=r.call('loadStreams',series+'#uk='+encodeURIComponent('{"v":1,"season":2,"episode":1}'));
+  await started;t.mock.timers.tick(5000);
+  assert.equal((await loading).success,true);
+  release(player(playlist()));await new Promise(setImmediate);
+  assert.ok(!r.calls.some(c=>c.url==='https://cinema.test/api/playlist/load'));
+});
+test('Kinogo stops losing quality probes when an in-flight HLS request is cancelled',async t=>{
+  t.mock.timers.enable({apis:['setTimeout']});
+  let startHls,release;
+  const started=new Promise(resolve=>startHls=resolve);
+  const response=new Promise(resolve=>release=resolve);
+  const r=await provider(({url})=>{
+    if(url===series)return withBackup();
+    if(url===frame)return player(playlist());
+    if(url==='https://cinema.test/api/playlist/load')return '{"file":"[720p]https://cdn.test/stalled.m3u8,[1080p]https://cdn.test/unneeded.m3u8"}';
+    if(url==='https://cdn.test/stalled.m3u8'){startHls();return response;}
+    if(url===backup)return backupPlayer();
+    if(url===backupApi+'show.txt')return JSON.stringify(backupPlaylist());
+    if(url===backupApi+'other-season.txt')return 'https://cdn.test/backup.m3u8';
+    return hls;
+  });
+  const loading=r.call('loadStreams',series+'#uk='+encodeURIComponent('{"v":1,"season":2,"episode":1}'));
+  await started;t.mock.timers.tick(5000);
+  assert.equal((await loading).success,true);
+  release({status:499,body:'cancelled'});await new Promise(setImmediate);
+  assert.ok(!r.calls.some(c=>c.url==='https://cdn.test/unneeded.m3u8'));
+});

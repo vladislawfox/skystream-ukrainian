@@ -47,10 +47,14 @@ void main() {
         '(function(){const manifest=${jsonEncode(manifest)}; $script\n globalThis.port={getHome,search,load,loadStreams};})();',
       );
       for (final entry in selected) {
+        final elapsed = Stopwatch()..start();
         final result = await harness.invoke(
           entry['method'] as String,
           List<Object?>.from(entry['args'] as List),
         ) as Map;
+        if (entry['maxDurationMs'] != null) {
+          expect(elapsed.elapsedMilliseconds, lessThan(entry['maxDurationMs'] as int));
+        }
         expect(
           result['success'],
           entry['success'],
@@ -119,6 +123,9 @@ class Harness {
       };
     final selected = matches.first;
     if (consumeFixtures) fixtures.remove(selected);
+    // An opt-in fault fixture verifies fallback without waiting for a host
+    // that never answers. A pending Future owns no timer or network resource.
+    if (selected['stall'] == true) return Completer<Map<String, dynamic>>().future;
     return Map<String, dynamic>.from(selected['response'] as Map);
   }
 

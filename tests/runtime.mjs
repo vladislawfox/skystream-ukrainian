@@ -20,7 +20,7 @@ export function runtime(code, request, baseUrl = manifest.baseUrl, providerManif
     return typeof response === 'string' ? { status: 200, body: response, headers: {} } : response;
   };
   const context = vm.createContext({
-    manifest: { ...providerManifest, baseUrl }, URL, console,
+    manifest: { ...providerManifest, baseUrl }, URL, console, setTimeout, clearTimeout,
     http_get: (url, headers) => http('GET', url, headers),
     http_post: (url, headers, body) => http('POST', url, headers, body),
     parse_html: async (html, selector, attr) => {
